@@ -61,6 +61,7 @@
 
         .article h3 {
             font-size: 1rem;
+            font-weight: 600;
         }
 
         .website {
@@ -182,7 +183,7 @@
 </body>
 <script>
     var tabs = document.getElementById("tab").getElementsByTagName("li");
-    var divs = document.getElementById("tabCon").getElementsByTagName("section");
+    var contents = document.getElementById("tabCon").getElementsByTagName("section");
    
    window.onload = count();
 
@@ -194,11 +195,11 @@
         for (var i = 0; i < tabs.length; i++) {
             if (tabs[i] == obj) {
                 tabs[i].className = "active";
-                divs[i].className = "show";
+                contents[i].className = "show";
                
             } else {
                 tabs[i].className = "";
-                divs[i].className = "";
+                contents[i].className = "";
             }
              count();
         }
