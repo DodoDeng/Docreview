@@ -24,6 +24,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            width:60%;
         }
 
         .content-area .editor {
@@ -32,6 +33,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            max-width: 10rem;
         }
 
         .content-area time {
@@ -71,24 +73,33 @@
             right: 0.5rem;
             top: 1rem;
         }
-        .search-bar{
-            margin-bottom:1rem;
+
+        .search-bar {
+            margin-bottom: 1rem;
             position: relative;
         }
-        .search-bar input{
-            border:1px solid #e8e8e8;
-            width:100%;
-            height:2rem;
+
+        .search-bar input {
+            border: 1px solid #e8e8e8;
+            width: 100%;
+            height: 2rem;
             padding: 0.5rem;
         }
-        .search-bar button{
+
+        .search-bar button {
             background: url(images/icon_search.png) no-repeat 0 0;
-            width:1.3rem;
-            height:1.3rem;
+            width: 1.3rem;
+            height: 1.3rem;
             background-size: contain;
             position: absolute;
-            right:0.5rem;
-            top:0.3rem;
+            right: 0.5rem;
+            top: 0.3rem;
+        }
+
+        .editor {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
         }
     </style>
 </head>
@@ -99,68 +110,121 @@
         <h1>Document Review Report</h1>
         <a href="" class="more"></a>
     </div>
-    <div class="content-area">
-        <div class="search-bar">
-            <input type="text" value="Find a item"/>
-            <button type="submit"></button>
-        </div>
-        <ul>
-            <li>
-                <span class="icon"><img src="images/icon_txt.png"></span>
-                <h3>IT-Document</h3>
-                <time >2018.03.20 3:50pm</time>
-                <div class="editor" style="position:absolute;right:1rem; top:0.5rem;">Edit By Andy</div>
-            </li>
-            <li>
-                <span class="icon"><img src="images/icon_word.png"></span>
-                <h3>IT-Document</h3>
-                <time >2018.03.20 3:50pm</time>
-                <div class="editor" style="position:absolute;right:1rem; top:0.5rem;">Edit By Ada</div>
-            </li>
-            <li>
-                <span class="icon"><img src="images/icon_ppt.png"></span>
-                <h3>IT-Document</h3>
-                <time >2018.03.20 3:50pm</time>
-                <div class="editor" style="position:absolute;right:1rem; top:0.5rem;">Edit By Adele</div>
-            </li>
-            <li>
-                <span class="icon"><img src="images/icon_excel.png"></span>
-                <h3>IT-Document</h3>
-                <time >2018.03.20 3:50pm</time>
-                <div class="editor" style="position:absolute;right:1rem; top:0.5rem;">Edit By Alba</div>
-            </li>
-            <li>
-                <span class="icon"><img src="images/icon_txt.png"></span>
-                <h3>IT-Document</h3>
-                <time >2018.03.20 3:50pm</time>
-                <div class="editor" style="position:absolute;right:1rem; top:0.5rem;">Edit By Alex</div>
-            </li>
-            <li>
-                <span class="icon"><img src="images/icon_txt.png"></span>
-                <h3>IT-Document</h3>
-                <time >2018.03.20 3:50pm</time>
-                <div class="editor" style="position:absolute;right:1rem; top:0.5rem;">Edit By Alice</div>
-            </li>
-            <li>
-                <span class="icon"><img src="images/icon_txt.png"></span>
-                <h3>IT-Document</h3>
-                <time >2018.03.20 3:50pm</time>
-                <div class="editor" style="position:absolute;right:1rem; top:0.5rem;">Edit By Amber</div>
-            </li>
-            <li>
-                <span class="icon"><img src="images/icon_txt.png"></span>
-                <h3>IT-Document</h3>
-                <time >2018.03.20 3:50pm</time>
-                <div class="editor" style="position:absolute;right:1rem; top:0.5rem;">Edit By Ann</div>
-            </li>
-
-        </ul>
+    <div class="content-area" id="view">
     </div>
 </body>
-<script>
-    var oli = document.getElementsByTagName("li");
-    for (var i = 0; i < oli.length; i++) {
-        oli[i].onclick = function () { window.location = "Docdetails.html" }
-    }
+
+<script type="text/html" id="tpl">
+    <form class="layui-form search-bar"  >
+            <input type="hidden" name='domain' value="{{d._get.domain}}"  />
+            <input type="hidden" name='site' value='{{d._get.site}}'  />
+            <input type="text" name='key' value="{{d._get.key?d._get.key:''}}"  placeholder="Find a item" />
+            <button type="submit" layui-submit lay-filter="search"></button>
+    </form>
+        <ul>
+            {{#  layui.each(d.list, function(index, item){ }}
+            <li>
+                <a href="Docdetails.html?domain={{item.domain}}&site={{item.site}}&doc={{item.FileName}}">
+                <span class="icon"><img src="images/icon_txt.png"></span>
+                <h3>{{item.FileName}}</h3>
+                <time>2018.03.20 3:50pm</time>
+                <div class="editor" >Edit By {{item.Users}}</div>
+                </a>
+            </li> 
+     
+            {{#  }); }}
+            {{#  if(d.list.length === 0){ }}
+                无数据
+            {{#  } }} 
+
+          
+        </ul>
 </script>
+
+
+<script type="application/javascript" src="layui/layui.js"></script>
+<script>
+    layui.use(['layer', 'form', 'jquery', 'laytpl'], function () {
+        var layer = layui.layer,
+            view = layui.view,
+            form = layui.form,
+            laytpl = layui.laytpl,
+            $ = layui.jquery;
+        var _get = getParams();
+
+        loading();
+
+        form.on('submit(search)', function (data) {
+            layer.msg(JSON.stringify(data.field));
+            return false;
+        })
+
+
+
+        function loading() {
+            $.ajax({
+                url: 'https://onlinecomment.rdc.gsk-rd-apps.com/api/comments/QueryCommentUsers',
+                type: 'get',
+                dataType: 'json',
+                success: function (res) {
+                    list = [];
+                    $.each(res, function (i) {
+                        info = res[i]['FilePath'].split("/");
+                        //test go
+                        if (info.length < 2) {
+                            info = res[i]['FilePath'].split("\\");
+                        }
+                        if (info.length < 2) {
+                            info[5] = res[i]['FilePath'];
+                            info[6] = res[i]['FilePath'];
+                            info[2] = res[i]['FilePath'];
+                        }
+                        //test  end 
+                        res[i]['site'] = info[5];
+                        res[i]['dir'] = info[6];
+                        res[i]['domain'] = info[2];
+
+                        if (res[i]['domain'] != _get['domain'] || res[i]['site'] != _get['site']) return true;
+                        if (!!_get.key && res[i]['FileName'].indexOf(_get.key) == -1) return true;
+                        list.push(res[i]);
+                    })
+                    console.log(list);
+                    bindtmp("#tpl", "#view", { list: list, _get: _get });
+                    form.render();
+                }
+            })
+        }
+
+
+
+        // encodeURI(obj)
+
+        function bindtmp(tmp, view, data) {
+            var getTpl = $(tmp).html(),
+                view = $(view);
+            laytpl(getTpl).render(data, function (html) {
+                view.html(html);
+            });
+        }
+
+        function getParams(url) {
+            var theRequest = new Object();
+            if (!url)
+                url = location.href;
+            if (url.indexOf("?") !== -1) {
+                var str = url.substr(url.indexOf("?") + 1) + "&";
+                var strs = str.split("&");
+                for (var i = 0; i < strs.length - 1; i++) {
+                    var key = strs[i].substring(0, strs[i].indexOf("="));
+                    var val = strs[i].substring(strs[i].indexOf("=") + 1);
+                    theRequest[key] = decodeURI(val.replace(/\+/g, '%20'));
+                }
+            }
+            return theRequest;
+        }
+
+    });
+</script>
+
+
 </html>

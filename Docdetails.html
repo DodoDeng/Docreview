@@ -74,7 +74,6 @@
             cursor: pointer;
             position: relative;
             padding: 1rem 0;
-
         }
 
         #tabCon .editor {
@@ -82,7 +81,6 @@
             width: 30%;
             display: table-cell;
             vertical-align: top;
-
         }
 
         #tabCon p {
@@ -109,83 +107,150 @@
             </ul>
         </div>
         <div id="tabCon">
-            <section class="show">
-                <div class="search-bar">
-                    <input type="text" value="Find a item" />
-                    <button type="submit"></button>
-                </div>
-                <div class="article">
-                    <h3>Title XXXXXXXXXXXXXXXXXXXXXXXXXX</h3>
-                    <div class="website">https://xxxxxxxxxxxxxxx</div>
-                </div>
-                <ul>
-                    <li>
-                        <a class="editor" href="Docuser.html">Andy</a>
-                        <p>Comment xxxxxxxxxxxxxxxx</p>
-                    </li>
-                    <li>
-                        <a class="editor" href="Docuser.html">Ada</a>
-                        <p>Comment xxxxxxxxxxxxxxxx</p>
-                    </li>
-                    <li>
-                        <a class="editor" href="Docuser.html">Adele</a>
-                        <p>Comment xxxxxxxxxxxxxxxx</p>
-                    </li>
-                    <li>
-                        <a class="editor" href="Docuser.html">Alba</a>
-                        <p>Comment xxxxxxxxxxxxxxxx</p>
-                    </li>
-                    <li>
-                        <a class="editor" href="Docuser.html">Alex</a>
-                        <p>Comment xxxxxxxxxxxxxxxx</p>
-                    </li>
-                    <li>
-                        <a class="editor" href="Docuser.html">Alice</a>
-                        <p>Comment xxxxxxxxxxxxxxxx</p>
-                    </li>
-                    <li>
-                        <a class="editor" href="Docuser.html">Amber</a>
-                        <p>Comment xxxxxxxxxxxxxxxx</p>
-                    </li>
-                    <li>
-                        <a class="editor" href="Docuser.html">Ann</a>
-                        <p>Comment xxxxxxxxxxxxxxxx</p>
-                    </li>
-                </ul>
-            </section>
-            <section>
-                <div class="search-bar">
-                    <input type="text" value="Find a item" />
-                    <button type="submit"></button>
-                </div>
-                <div class="article">
-                    <h3>Title XXXXXXXXXXXXXXXXXXXXXXXXXX</h3>
-                    <div class="website">https://xxxxxxxxxxxxxxx</div>
-                </div>
-                <ul>
-                     <li>
-                        <a class="editor" href="Docuser.html">Andy</a>
-                        <p>Comment xxxxxxxxxxxxxxxx</p>
-                    </li>
-                    <li>
-                        <a class="editor" href="Docuser.html">Ada</a>
-                        <p>Comment xxxxxxxxxxxxxxxx</p>
-                    </li>
-                    <li>
-                        <a class="editor" href="Docuser.html">Adele</a>
-                        <p>Comment xxxxxxxxxxxxxxxx</p>
-                    </li>
-                </ul>
-            </section>
+
         </div>
-        <div style="text-align: right;font-size: 0.8rem;line-height: 300%">Total:<span id="sumTotal"></span></div>
     </div>
 </body>
+<script type="text/html" id="tpl">
+    <div class="search-bar">
+        <input type="text" value="Find a item" />
+        <button type="submit"></button>
+    </div>
+    <div class="article">
+        <h3>{{d.info.FileName}}</h3>
+        <div class="website">{{d.info.FilePath}}</div>
+    </div>
+    <section class="show">
+
+        <ul>
+            {{#  layui.each(d.info.Users, function(index, item){ }}
+            <li>
+                    <a class="editor" href="Docuser.html">{{item}}</a>
+                    <p>Comment xxxxxxxxxxxxxxxx</p>
+                </li>
+        
+            {{#  }); }}
+            {{#  if(d.info.Users.length === 0){ }}
+                无数据
+            {{#  } }} 
+        </ul>
+        <div style="text-align: right;font-size: 0.8rem;line-height: 300%">Total:<span id="sumTotal">{{d.info.Users.length}}</span></div>
+
+    </section>
+    <section>
+
+        <ul>
+            {{#  layui.each(d.info.NonCommentUsers, function(index, item){ }}
+            <li>
+                    <a class="editor" href="Docuser.html">{{item}}</a>
+                    <p>Comment xxxxxxxxxxxxxxxx</p>
+                </li>
+        
+            {{#  }); }}
+            {{#  if(d.info.NonCommentUsers.length === 0){ }}
+                无数据
+            {{#  } }} 
+    
+        </ul>
+        <div style="text-align: right;font-size: 0.8rem;line-height: 300%">Total:<span id="sumTotal">{{d.info.NonCommentUsers.length}}</span></div>
+    </section>
+</script>
+
+
+<script type="application/javascript" src="layui/layui.js"></script>
+<script>
+    layui.use(['layer', 'form', 'jquery', 'laytpl'], function () {
+        var layer = layui.layer,
+            view = layui.view,
+            form = layui.form,
+            laytpl = layui.laytpl,
+            $ = layui.jquery;
+        var _get = getParams();
+
+        loading();
+
+        form.on('submit(search)', function (data) {
+            layer.msg(JSON.stringify(data.field));
+            return false;
+        })
+
+
+
+        function loading() {
+            $.ajax({
+                url: 'https://onlinecomment.rdc.gsk-rd-apps.com/api/comments/QueryDocCommentInfos',
+                type: 'get',
+                dataType: 'json',
+                success: function (res) {
+                    list = [];
+                    $.each(res, function (i) {
+                        info = res[i]['FilePath'].split("/");
+                        //test go
+                        if (info.length < 2) {
+                            info = res[i]['FilePath'].split("\\");
+                        }
+                        if (info.length < 2) {
+                            info[5] = res[i]['FilePath'];
+                            info[6] = res[i]['FilePath'];
+                            info[2] = res[i]['FilePath'];
+                        }
+                        //test  end 
+                        res[i]['site'] = info[5];
+                        res[i]['dir'] = info[6];
+                        res[i]['domain'] = info[2];
+
+                        if (res[i]['domain'] != _get['domain'] || res[i]['site'] != _get['site']) return true;
+                        if (res[i]['FileName'] != _get.doc) return true;
+                        list = res[i];
+                    })
+                   // list['NonCommentUsers'] = list['NonCommentUsers'].split(",");
+                   // list['Users'] = list['Users'].split(",");
+                    //list['ViewUsers'] = list['ViewUsers'].split(",");
+
+                    console.log(list);
+
+                    bindtmp("#tpl", "#tabCon", { info: list, _get: _get });
+                    form.render();
+                }
+            })
+        }
+
+
+
+        // encodeURI(obj)
+
+        function bindtmp(tmp, view, data) {
+            var getTpl = $(tmp).html(),
+                view = $(view);
+            laytpl(getTpl).render(data, function (html) {
+                view.html(html);
+            });
+        }
+
+        function getParams(url) {
+            var theRequest = new Object();
+            if (!url)
+                url = location.href;
+            if (url.indexOf("?") !== -1) {
+                var str = url.substr(url.indexOf("?") + 1) + "&";
+                var strs = str.split("&");
+                for (var i = 0; i < strs.length - 1; i++) {
+                    var key = strs[i].substring(0, strs[i].indexOf("="));
+                    var val = strs[i].substring(strs[i].indexOf("=") + 1);
+                    theRequest[key] = decodeURI(val.replace(/\+/g, '%20'));
+                }
+            }
+            return theRequest;
+        }
+
+    });
+</script>
+
 <script>
     var tabs = document.getElementById("tab").getElementsByTagName("li");
     var contents = document.getElementById("tabCon").getElementsByTagName("section");
-   
-   window.onload = count();
+
+    //window.onload = count();
 
     for (var i = 0; i < tabs.length; i++) {
         tabs[i].onclick = function () { change(this); }
@@ -196,20 +261,16 @@
             if (tabs[i] == obj) {
                 tabs[i].className = "active";
                 contents[i].className = "show";
-               
+
             } else {
                 tabs[i].className = "";
                 contents[i].className = "";
             }
-             count();
+
         }
-    } 
-    function count(){
-        var sumTotal=document.getElementById("sumTotal");
-        var num=document.querySelectorAll('.show li').length;
-        sumTotal.innerHTML=num;
     }
-    
+
+
 </script>
 
 </html>
