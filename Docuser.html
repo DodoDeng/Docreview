@@ -66,31 +66,127 @@
         <h1>Document Review Report</h1>
         <a href="" class="more"></a>
     </div>
-    <div style="padding: 1rem;">
-        <div class="editorBox">
+    <div style="padding: 1rem;" id="view">
+
+    </div>
+
+</body>
+<script type="text/html" id="tpl">
+    <div class="editorBox">
             <div><img src="images/icon_user.png" /></div>
-            <h3>Andy</h3>
+            <h3>{{d.user.Author}}</h3>
         </div>
         <ul>
             <li>
                 <div>Comment</div>
-                <p>xxxxxxxxxxxxxxxx</p>
+                <p>{{d.user.CommentedText?d.user.CommentedText:''}}</p>
             </li>
             <li>
                 <div>Time</div>
-                <p>2018.03.20 3:50pm</p>
+                <p>{{d.user.Date}}</p>
             </li>
             <li>
                 <div>Location</div>
-                <p>IT-Document</p>
+                <p>{{d.list.FileName}}</p>
             </li>
             <li>
                 <div>Reviews</div>
-                <p>123</p>
+                <p>{{d.user.Text}}</p>
             </li>
         </ul>
-    </div>
+</script>
+<script type="application/javascript" src="layui/layui.js"></script>
+<script type="application/javascript" src="js/dateformat.js"></script>
+<script>
+    //一般直接写在一个js文件中
+    layui.use(['layer', 'form', 'jquery', 'laytpl'], function () {
+        var layer = layui.layer,
+            view = layui.view,
+            form = layui.form,
+            laytpl = layui.laytpl,
+            $ = layui.jquery;
+        var _get = getParams();
 
-</body>
+        loading();
+
+
+
+        function loading() {
+            $.ajax({
+                url: 'https://onlinecomment.rdc.gsk-rd-apps.com/api/comments/QueryDocCommentInfos',
+                type: 'get',
+                dataType: 'json',
+                success: function (res) {
+                    list = [];
+                    $.each(res, function (i, vo) {
+
+                        info = vo['FilePath'].split("/");
+                        //test go
+                        if (info.length < 2) {
+                            info = res[i]['FilePath'].split("\\");
+                        }
+                        if (info.length < 2) {
+                            info[4] = res[i]['FilePath'];
+                            info[6] = res[i]['FilePath'];
+                            info[2] = res[i]['FilePath'];
+                        }
+                        //test  end 
+                        vo['site'] = info[4];
+                        vo['dir'] = info[6];
+                        vo['domain'] = info[2];
+
+
+                        if (vo['domain'] != _get['domain'] || vo['site'] != _get['site']) return true;
+                        if (vo['FileName'] != _get.doc) return true;
+                        list = vo;
+                    })
+                    user = [];
+                    $.each(list['Comments'], function (i, vo) {
+
+                        if (vo['Id'] == _get['id']) {
+                            user = vo;
+                        }
+
+                    })
+                    user['Date'] = dateFormat('Y-m-d h:ia', user['Date']);
+
+                    console.log(user);
+
+                    bindtmp("#tpl", "#view", { list: list, user: user, _get: _get });
+                    form.render();
+                }
+            })
+        }
+
+
+
+        // encodeURI(obj)
+
+        function bindtmp(tmp, view, data) {
+            var getTpl = $(tmp).html(),
+                view = $(view);
+            laytpl(getTpl).render(data, function (html) {
+                view.html(html);
+            });
+        }
+
+        function getParams(url) {
+            var theRequest = new Object();
+            if (!url)
+                url = location.href;
+            if (url.indexOf("?") !== -1) {
+                var str = url.substr(url.indexOf("?") + 1) + "&";
+                var strs = str.split("&");
+                for (var i = 0; i < strs.length - 1; i++) {
+                    var key = strs[i].substring(0, strs[i].indexOf("="));
+                    var val = strs[i].substring(strs[i].indexOf("=") + 1);
+                    theRequest[key] = decodeURI(val.replace(/\+/g, '%20'));
+                }
+            }
+            return theRequest;
+        }
+
+    });
+</script>
 
 </html>

@@ -48,57 +48,85 @@
         <h1>Document Review</h1>
         <a href="" class="more"></a>
     </div>
-    <div class="content-area">
-        <ul>
-            <li>
-                <img src="images/icon_site.png" />
-                <h3>IT-Document</h3>
-                <p>www.baidu.com</p>
-            </li>
-            <li>
-                <img src="images/icon_site.png" />
-                <h3>IT-Document</h3>
-                <p>www.baidu.com</p>
-            </li>
-            <li>
-                <img src="images/icon_site.png" />
-                <h3>IT-Document</h3>
-                <p>www.baidu.com</p>
-            </li>
-            <li>
-                <img src="images/icon_site.png" />
-                <h3>IT-Document</h3>
-                <p>www.baidu.com</p>
-            </li>
-            <li>
-                <img src="images/icon_site.png" />
-                <h3>IT-Document</h3>
-                <p>www.baidu.com</p>
-            </li>
-            <li>
-                <img src="images/icon_site.png" />
-                <h3>IT-Document</h3>
-                <p>www.baidu.com</p>
-            </li>
-            <li>
-                <img src="images/icon_site.png" />
-                <h3>IT-Document</h3>
-                <p>www.baidu.com</p>
-            </li>
-            <li>
-                <img src="images/icon_site.png" />
-                <h3>IT-Document</h3>
-                <p>www.baidu.com</p>
-            </li>
+    <div class="content-area" id="view">
 
-        </ul>
     </div>
 </body>
+<script type="text/html" id="tpl">
+    <ul>
+        {{#  layui.each(d.list, function(index, item){ }}
+        <li>
+            <a href="Doclist.html?domain={{=encodeURI(item.domain)}}&site={{=encodeURI(item.site)}}">
+            <img src="images/icon_site.png" />
+
+            <h3>{{item.site}}</h3>
+            <p>{{item.domain}}</p>
+            </a>
+        </li>
+        {{#  }); }}
+        {{#  if(d.list.length === 0){ }}
+            no data
+        {{#  } }} 
+    </ul>
+</script>
+
+<script type="application/javascript" src="layui/layui.js"></script>
 <script>
-    var oli = document.getElementsByTagName("li");
-    for (var i = 0; i < oli.length; i++) {
-        oli[i].onclick = function () { window.location = "Doclist.html" }
-    }
+    layui.use(['layer', 'form', 'jquery', 'laytpl'], function () {
+        var layer = layui.layer,
+            view = layui.view,
+            laytpl = layui.laytpl,
+            $ = layui.jquery;
+        loading();
+        function loading() {
+            $.ajax({
+                url: 'https://onlinecomment.rdc.gsk-rd-apps.com/api/comments/QueryDocCommentInfos',
+                type: 'get',
+                dataType: 'json',
+                success: function (res) {
+                    list = [];
+                    $.each(res, function (i,vo) {
+ 
+                        info = vo['FilePath'].split("/");
+                        //test go
+                        if (info.length < 2) {
+                            info = res[i]['FilePath'].split("\\");
+                        }
+                        if (info.length < 2) {
+                            info[4] = res[i]['FilePath'];
+                            info[6] = res[i]['FilePath'];
+                            info[2] = res[i]['FilePath'];
+                        }
+                        //test  end 
+                        vo['site'] = info[4];
+                        vo['dir'] = info[6];
+                        vo['domain'] = info[2];
+
+
+                        list.push(vo);
+                    })
+                    list=reduce(list);
+                    console.log(list);
+                    bindtmp("#tpl", "#view", { list: list });
+                }
+            })
+        }
+        function bindtmp(tmp, view, data) {
+            var getTpl = $(tmp).html(),
+                view = $(view);
+            laytpl(getTpl).render(data, function (html) {
+                view.html(html);
+            });
+        }
+        function reduce(person){            
+            let obj = {};
+            return person.reduce((cur,next) => {
+                obj[next.site] ? "" : obj[next.site] = true && cur.push(next);
+                return cur;
+            },[]) 
+
+        } 
+    });
 </script>
 
 </html>
